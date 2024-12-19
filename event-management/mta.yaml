@@ -1,0 +1,63 @@
+_schema-version: 3.3.0
+ID: event-management
+version: 1.0.0
+description: "A simple CAP project."
+parameters:
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+modules:
+  - name: event-management-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+      readiness-health-check-type: http
+      readiness-health-check-http-endpoint: /health
+    build-parameters:
+      builder: npm
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: event-management-destination
+      - name: my_hana_db 
+      - name: event-management-auth 
+
+  - name: event-management-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 256M
+      disk-quota: 512M
+    requires:
+      - name: my_hana_db
+        properties:
+          TARGET_CONTAINER: ~{hdi-container-name}
+
+resources:
+  - name: event-management-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+  - name: my_hana_db 
+    type: org.cloudfoundry.managed-service 
+    parameters:
+      service: hana-cloud-trial               
+      service-plan: hana                    
+      service-name: my_hana_db 
+    properties:
+      hdi-container-name: ${service-name}
+  - name: event-management-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json

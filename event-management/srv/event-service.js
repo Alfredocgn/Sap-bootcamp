@@ -1,26 +1,18 @@
 const cds = require('@sap/cds');
-const axios = require('axios');
 
 module.exports = cds.service.impl(async function(){
     const {Events,Participants} = this.entities;
 
-    const BP_API_CONFIG = {
-        baseURL: process.env.BASE_URL,
-        auth: {
-            username: process.env.USERNAME,
-            password: process.env.PASSWORD
-        },
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    };
+    const BPService = await cds.connect.to('API_BUSINESS_PARTNER');
     async function validateBusinessPartner(businessPartnerId) {
         try {
-            const response = await axios.get(
-                `/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner('${businessPartnerId}')`,
-                BP_API_CONFIG
-            );
-            return response.data;
+            const result = await BPService.read('A_BusinessPartner')
+                .where({ BusinessPartner: businessPartnerId });
+            
+            if (!result.length) {
+                throw new Error(`Invalid BusinessPartnerID: ${businessPartnerId}`);
+            }
+            return result[0];
         } catch (error) {
             console.error('BP API Error:', error.message);
             throw new Error(`Invalid BusinessPartnerID: ${businessPartnerId}`);
@@ -119,11 +111,11 @@ module.exports = cds.service.impl(async function(){
         }
     })
     this.on('fetchParticipantDetails', async(req) => {
-        const {businessPartnerID} = req.data;
-        if(!businessPartnerID) throw new Error('BusinessPartnerID is required');
+        const {businessPartnerId} = req.data;
+        if(!businessPartnerId) throw new Error('BusinessPartnerId is required');
         try {
-            const response = await validateBusinessPartner(businessPartnerID);
-            return response.data;
+            const result = await validateBusinessPartner(businessPartnerId);
+            return result;
         } catch(error) {
             console.error('Error fetching from BP API:', error);
             throw new Error('Failed to fetch business partner details');

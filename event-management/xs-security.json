@@ -1,0 +1,30 @@
+{
+    "xsappname": "event-management",
+    "tenant-mode": "dedicated",
+    "scopes": [
+      {
+        "name": "$XSAPPNAME.Admin",
+        "description": "Admin"
+      },
+      {
+        "name": "$XSAPPNAME.User",
+        "description": "User"
+      }
+    ],
+    "role-templates": [
+      {
+        "name": "Admin",
+        "description": "Admin Role",
+        "scope-references": [
+          "$XSAPPNAME.Admin"
+        ]
+      },
+      {
+        "name": "User",
+        "description": "User Role",
+        "scope-references": [
+          "$XSAPPNAME.User"
+        ]
+      }
+    ]
+  }

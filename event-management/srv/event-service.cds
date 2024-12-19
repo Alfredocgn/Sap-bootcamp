@@ -9,5 +9,5 @@ service EventService {
     action cancelEvent(eventId:Integer,reason:String);
     action reopenEvent(eventId:Integer);
     function getEventParticipants(eventId:Integer) returns array of Participants;
-    function fetchParticipantsDetails(businessPartnerId:String) returns String;
+    function fetchParticipantDetails(businessPartnerId:String) returns String;
 }
